@@ -4,9 +4,8 @@ vocab: 'aAàÀảẢãÃáÁạẠăĂằẰẳẲẵẴắẮặẶâÂầẦ�
 # cpu, cuda, cuda:0
 device: cpu
 backbone: vgg19_bn
-weights: https://vocr.vn/data/vietocr/vgg_transformer.pth
+weights: https://vocr.vn/data/vietocr/vgg_seq2seq.pth
 cnn:
-    pretrained: True
     # pooling stride size
     ss:
         - [2, 2]
@@ -23,16 +22,14 @@ cnn:
         - [1, 1]
     # dim of ouput feature map
     hidden: 256
-seq_modeling: transformer
-transformer:  
-    d_model: 256
-    nhead: 8
-    num_encoder_layers: 6
-    num_decoder_layers: 6
-    dim_feedforward: 2048
-    max_seq_length: 1024
-    pos_dropout: 0.1
-    trans_dropout: 0.1
+
+seq_modeling: seq2seq
+transformer:
+    encoder_hidden: 256
+    decoder_hidden: 256
+    img_channel: 256
+    decoder_embedded: 256
+    dropout: 0.1
 
 optimizer:
     max_lr: 0.0003 
