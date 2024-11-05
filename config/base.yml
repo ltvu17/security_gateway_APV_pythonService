@@ -6,6 +6,7 @@ device: cpu
 backbone: vgg19_bn
 weights: https://vocr.vn/data/vietocr/vgg_seq2seq.pth
 cnn:
+    pretrained: True
     # pooling stride size
     ss:
         - [2, 2]
