@@ -1,0 +1,7 @@
+pillow>=7.1.2
+fastapi==0.115.4
+ultralytics==8.3.27
+vietocr==0.3.13
+uvicorn==0.32.0
+pydantic==2.9.2
+python-multipart==0.0.17
