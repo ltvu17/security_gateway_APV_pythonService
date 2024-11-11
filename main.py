@@ -10,6 +10,10 @@ from vietocr.tool.predictor import Predictor
 from vietocr.tool.config import Cfg
 from schema import IdentityCard
 
+import cv2
+from paddleocr import PaddleOCR, draw_ocr
+import numpy as np
+
 app = FastAPI()
 
 origins = [
@@ -69,3 +73,25 @@ async def detectCCCD(file : UploadFile = File(...)):
     res.name = s[1]
     res.birth = s[2]
     return res
+
+@app.post("/licensePlate")
+async def detectLicensePlate(file : UploadFile = File(...)):
+    file.filename = f"{uuid.uuid4()}.jpg"
+    img = cv2.imdecode(np.frombuffer(await file.read(), np.uint8), cv2.IMREAD_UNCHANGED)
+    model_path = "biensoxe.pt"
+    model = YOLO(model_path)
+    results = model.predict(source=img)
+    boxes = results[0].boxes
+    box = boxes[0]
+    ocr = PaddleOCR(use_angle_cls=True, lang='en')
+    imgcrop = img[int(box.xyxy[0].tolist()[1]):int(box.xyxy[0].tolist()[3]), int(box.xyxy[0].tolist()[0]):int(box.xyxy[0].tolist()[2])]
+    assert not isinstance(imgcrop,type(None))   
+    result = ocr.ocr(imgcrop, cls=True)
+    response = ""
+    for idx in range(len(result)):
+        res = result[idx]
+    for line in res:
+        response += " " + line[1][0]
+    return {
+        "licensePlate" : response
+    }
