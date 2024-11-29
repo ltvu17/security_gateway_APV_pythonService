@@ -8,7 +8,7 @@ from ultralytics import YOLO
 from PIL import Image, ImageOps
 from vietocr.tool.predictor import Predictor
 from vietocr.tool.config import Cfg
-from schema import IdentityCard
+from schema import IdentityCard, DrivingLicense
 
 import cv2
 from paddleocr import PaddleOCR, draw_ocr
@@ -95,3 +95,45 @@ async def detectLicensePlate(file : UploadFile = File(...)):
     return {
         "licensePlate" : response
     }
+    
+@app.post("/DrivingLicense")
+async def detectDrivingLicense(file : UploadFile = File(...)):
+    res = DrivingLicense(id="",birth="",name="")
+    file.filename = f"{uuid.uuid4()}.jpg"
+    img = Image.open(io.BytesIO(await file.read()))
+    img = ImageOps.exif_transpose(img)
+    model_path = "drivingLicense.pt"
+    model = YOLO(model_path)
+    results = model.predict(source=img)
+    boxes = results[0].boxes
+    crop = ["","",""]
+    newcrop = ["","",""]
+    for box in boxes:
+        imgcrop = img.crop(box=box.xyxy[0].tolist())
+        if(int(box.cls[0].tolist()) == 6):
+            crop[0] = imgcrop
+            newcrop[0] = "imgcrop"
+        elif(int(box.cls[0].tolist()) == 4):
+            crop[1] = imgcrop
+            newcrop[1] = "imgcrop"
+        elif(int(box.cls[0].tolist()) == 1):
+            crop[2] = imgcrop
+            newcrop[2] = "imgcrop"
+    config = Cfg.load_config_from_file("config/base.yml")
+    detector = Predictor(config)
+    if(crop.count("") == 3):
+        raise HTTPException(status_code=404, detail="Item not found") 
+    index = -1
+    while(crop.__contains__("")):
+        index = crop.index("")
+        crop[index] = crop[0]
+    s = detector.predict_batch(crop)
+    if(index != -1):
+        while(newcrop.__contains__("")):
+            index = newcrop.index("")
+            s[index] = ""
+            newcrop.remove("")
+    res.id = s[0]
+    res.name = s[1]
+    res.birth = s[2]
+    return res
