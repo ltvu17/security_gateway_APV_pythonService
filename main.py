@@ -61,10 +61,9 @@ async def detectCCCD(file : UploadFile = File(...)):
         elif(int(box.cls[0].tolist()) == 1):
             crop[2] = imgcrop
             newcrop[2] = "imgcrop"
-        if(int(box.cls[0].tolist()) != 11):
-            imgblurcrop = imgblur[int(box.xyxy[0].tolist()[1]):int(box.xyxy[0].tolist()[3]), int(box.xyxy[0].tolist()[0]):int(box.xyxy[0].tolist()[2])]
-            imgblurcrop = cv2.GaussianBlur(imgblurcrop,(kernel_width, kernel_height), 0)
-            imgblur[int(box.xyxy[0].tolist()[1]):int(box.xyxy[0].tolist()[3]), int(box.xyxy[0].tolist()[0]):int(box.xyxy[0].tolist()[2])] = imgblurcrop
+        imgblurcrop = imgblur[int(box.xyxy[0].tolist()[1]):int(box.xyxy[0].tolist()[3]), int(box.xyxy[0].tolist()[0]):int(box.xyxy[0].tolist()[2])]
+        imgblurcrop = cv2.GaussianBlur(imgblurcrop,(kernel_width, kernel_height), 0)
+        imgblur[int(box.xyxy[0].tolist()[1]):int(box.xyxy[0].tolist()[3]), int(box.xyxy[0].tolist()[0]):int(box.xyxy[0].tolist()[2])] = imgblurcrop
     
     config = Cfg.load_config_from_file("config/base.yml")
     detector = Predictor(config)
