@@ -121,29 +121,32 @@ async def detectDrivingLicense(file : UploadFile = File(...)):
     h, w = imgblur.shape[:2]
     kernel_width = (w // 7) | 1
     kernel_height = (h // 7) | 1
-    model_path = "drivingLicense.pt"
+    model_path = "drivingLicenseV2.pt"
     model = YOLO(model_path)
     results = model.predict(source=img)
+    ocr = PaddleOCR(use_angle_cls=True, lang = "en")
     boxes = results[0].boxes
-    crop = ["","",""]
-    newcrop = ["","",""]
+    # if( not (boxes.cls.__contains__(0)) or not (boxes.cls.__contains__(1))
+    #      or not (boxes.cls.__contains__(6)) or not (boxes.cls.__contains__(7)) or not (boxes.cls.__contains__(8))):
+    #     raise HTTPException(status_code=404, detail="Không thể trích xuất thông tin thử lại hình ảnh khác") 
+    crop = ["",""]
+    newcrop = ["",""]
     for box in boxes:
         imgcrop = img.crop(box=box.xyxy[0].tolist())
         if(int(box.cls[0].tolist()) == 6):
             crop[0] = imgcrop
             newcrop[0] = "imgcrop"
-        elif(int(box.cls[0].tolist()) == 4):
+        elif(int(box.cls[0].tolist()) == 1):
             crop[1] = imgcrop
             newcrop[1] = "imgcrop"
-        elif(int(box.cls[0].tolist()) == 1):
-            crop[2] = imgcrop
-            newcrop[2] = "imgcrop"
         imgblurcrop = imgblur[int(box.xyxy[0].tolist()[1]):int(box.xyxy[0].tolist()[3]), int(box.xyxy[0].tolist()[0]):int(box.xyxy[0].tolist()[2])]
+        if(int(box.cls[0].tolist()) == 8):
+            res.id = ocr.ocr(imgblurcrop, cls=True)[0][0][1][0]
         imgblurcrop = cv2.GaussianBlur(imgblurcrop,(kernel_width, kernel_height), 0)
         imgblur[int(box.xyxy[0].tolist()[1]):int(box.xyxy[0].tolist()[3]), int(box.xyxy[0].tolist()[0]):int(box.xyxy[0].tolist()[2])] = imgblurcrop
     config = Cfg.load_config_from_file("config/base.yml")
     detector = Predictor(config)
-    if(crop.count("") == 3):
+    if(crop.count("") == 2):
         raise HTTPException(status_code=404, detail="Item not found") 
     index = -1
     while(crop.__contains__("")):
@@ -158,8 +161,7 @@ async def detectDrivingLicense(file : UploadFile = File(...)):
     _, im_arr = cv2.imencode('.jpg', imgblur)
     im_bytes = im_arr.tobytes()
     im_b64 = base64.b64encode(im_bytes)
-    res.id = s[0]
-    res.name = s[1]
-    res.birth = s[2]
+    res.name = s[0]
+    res.birth = s[1]
     res.imgblur = im_b64
     return res
