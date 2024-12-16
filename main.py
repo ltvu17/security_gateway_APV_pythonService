@@ -126,9 +126,9 @@ async def detectDrivingLicense(file : UploadFile = File(...)):
     results = model.predict(source=img)
     ocr = PaddleOCR(use_angle_cls=True, lang = "en")
     boxes = results[0].boxes
-    # if( not (boxes.cls.__contains__(0)) or not (boxes.cls.__contains__(1))
-    #      or not (boxes.cls.__contains__(6)) or not (boxes.cls.__contains__(7)) or not (boxes.cls.__contains__(8))):
-    #     raise HTTPException(status_code=404, detail="Không thể trích xuất thông tin thử lại hình ảnh khác") 
+    if( not (boxes.cls.__contains__(0)) or not (boxes.cls.__contains__(1))
+         or not (boxes.cls.__contains__(6)) or not (boxes.cls.__contains__(8))):
+        raise HTTPException(status_code=404, detail="Không thể trích xuất thông tin thử lại hình ảnh khác") 
     crop = ["",""]
     newcrop = ["",""]
     for box in boxes:
